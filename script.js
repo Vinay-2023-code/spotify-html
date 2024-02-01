@@ -7,7 +7,7 @@ let myProgressBar = document.getElementById("myProgressBar");
 let gif = document.getElementById("gif");
 let songs = [
   { songName: "Ram Siya Ram", filePath: "1.mp3", coverPath: "1.jpg" },
-  { songName: "Ram Naam se Jagmag Hai", filePath: "2.m4r", coverPath: "cover/1.jpg" },
+  { songName: "Ram Naam se Jagmag Hai", filePath: "2.mp3", coverPath: "cover/1.jpg" },
   { songName: "Patthar pe Raam Naam", filePath: "3.mp3", coverPath: "cover/1.jpg" },
   { songName: "Ram Aynge", filePath: "4.mp3", coverPath: "cover/1.jpg" },
   { songName: "Yug Ram Raj Ka Aa Gaya", filePath: "5.mp3", coverPath: "cover/1.jpg" },
