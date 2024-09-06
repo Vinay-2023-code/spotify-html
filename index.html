@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Spotify - Your favourite music is here</title>
-        <link rel="stylesheet" href="style.css">
-        </head>
-<body>
+<html lang="en" ng-app="spotifyApp">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify - Your favourite music is here</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body ng-controller="SpotifyController">
     <nav>
         <ul>
             <li class="brand"><img src="logo.png" alt="Spotify"> Spotify</li>
@@ -20,55 +20,18 @@
         <div class="songList">
             <h1>Best of NCS - No Copyright Sounds</h1>
             <div class="songItemContainer">
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="0" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="1" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="2" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="3" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="4" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="5" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="6" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="7" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="8" class="far songItemPlay fa-play-circle"></i> </span></span>
-                </div>
-                <div class="songItem">
-                    <img alt="1">
-                    <span class="songName"></span>
-                    <span class="songlistplay"><span class="timestamp">05:34 <i id="9" class="far songItemPlay fa-play-circle"></i> </span></span>
+                <div class="songItem" ng-repeat="song in songs">
+                    <img ng-src="{{song.coverPath}}" alt="{{song.songName}}">
+                    <span class="songName">{{song.songName}}</span>
+                    <span class="songlistplay">
+                        <span class="timestamp">
+                            05:34 
+                            <i ng-click="playSong($index)" 
+                               class="far songItemPlay" 
+                               ng-class="{'fa-play-circle': songIndex !== $index, 'fa-pause-circle': songIndex === $index}">
+                            </i>
+                        </span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -76,18 +39,90 @@
     </div>
 
     <div class="bottom">
-        <input type="range" name="range" id="myProgressBar" min="0" value="0" max="100">
+        <input type="range" id="myProgressBar" ng-model="progress" min="0" max="100" ng-change="seek()">
         <div class="icons">
-            <!-- fontawesome icons -->
-            <i class="fas fa-3x fa-step-backward" id="previous"></i>
-            <i class="far fa-3x fa-play-circle" id="masterPlay"></i>
-            <i class="fas fa-3x fa-step-forward" id="next"></i> 
+            <i class="fas fa-3x fa-step-backward" ng-click="previous()"></i>
+            <i class="far fa-3x" 
+               ng-click="togglePlay()" 
+               ng-class="{'fa-play-circle': audioElement.paused, 'fa-pause-circle': !audioElement.paused}">
+            </i>
+            <i class="fas fa-3x fa-step-forward" ng-click="next()"></i> 
         </div>
         <div class="songInfo">
-            <img src="playing.gif" width="42px" alt="" id="gif"> <span id="masterSongName">Warriyo - Mortals [NCS Release]</span>
+            <img src="playing.gif" width="42px" alt="" ng-show="!audioElement.paused"> 
+            <span id="masterSongName">{{currentSong.songName}}</span>
         </div>
     </div>
-    <script src="script.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <script src="https://kit.fontawesome.com/26504e4a1f.js" crossorigin="anonymous"></script>
+    <script>
+        angular.module('spotifyApp', [])
+        .controller('SpotifyController', function($scope) {
+            console.log("Welcome to Spotify");
+
+            // Initialize the Variables
+            $scope.songIndex = 0;
+            $scope.audioElement = new Audio('songs/1.mp3');
+            $scope.progress = 0;
+
+            $scope.songs = [
+                {songName: "Ram Siya Ram [NCS Release]", filePath: "songs/1.mp3", coverPath: "covers/1.jpg"},
+                {songName: "Ram Naam Se Jag Mag", filePath: "songs/2.mp3", coverPath: "covers/2.jpg"},
+                {songName: "Hanuman Ji ne Saath Diya [NCS Release]-320k", filePath: "songs/3.mp3", coverPath: "covers/3.jpg"},
+                {songName: "Ram Aynge [NCS Release]", filePath: "songs/4.mp3", coverPath: "covers/4.jpg"},
+                {songName: "Yug Ram Raj Ka Aagaya-NCS-Release", filePath: "songs/5.mp3", coverPath: "covers/5.jpg"},
+                {songName: "Sab Kuch Tera Kuch Nhi Mera", filePath: "songs/2.mp3", coverPath: "covers/6.jpg"},
+                {songName: "Jai Jai Shree Ram", filePath: "songs/2.mp3", coverPath: "covers/7.jpg"},
+                {songName: "Bhula Dena - Salam-e-Ishq", filePath: "songs/2.mp3", coverPath: "covers/8.jpg"},
+                {songName: "Tumhari Kasam - Salam-e-Ishq", filePath: "songs/2.mp3", coverPath: "covers/9.jpg"},
+                {songName: "Na Jaana - Salam-e-Ishq", filePath: "songs/4.mp3", coverPath: "covers/10.jpg"},
+            ];
+
+            $scope.currentSong = $scope.songs[$scope.songIndex];
+
+            // Play or Pause the Song
+            $scope.togglePlay = function() {
+                if ($scope.audioElement.paused) {
+                    $scope.audioElement.play();
+                } else {
+                    $scope.audioElement.pause();
+                }
+            };
+
+            // Update Progress Bar as Song Plays
+            $scope.audioElement.addEventListener('timeupdate', function() {
+                $scope.$apply(function() {
+                    $scope.progress = parseInt(($scope.audioElement.currentTime / $scope.audioElement.duration) * 100);
+                });
+            });
+
+            // Seek to the desired position
+            $scope.seek = function() {
+                $scope.audioElement.currentTime = $scope.progress * $scope.audioElement.duration / 100;
+            };
+
+            // Play a selected song
+            $scope.playSong = function(index) {
+                $scope.songIndex = index;
+                $scope.currentSong = $scope.songs[$scope.songIndex];
+                $scope.audioElement.src = $scope.currentSong.filePath;
+                $scope.audioElement.currentTime = 0;
+                $scope.audioElement.play();
+            };
+
+            // Go to the next song
+            $scope.next = function() {
+                $scope.songIndex = ($scope.songIndex + 1) % $scope.songs.length;
+                $scope.playSong($scope.songIndex);
+            };
+
+            // Go to the previous song
+            $scope.previous = function() {
+                $scope.songIndex = ($scope.songIndex - 1 + $scope.songs.length) % $scope.songs.length;
+                $scope.playSong($scope.songIndex);
+            };
+        });
+    </script>
 </body>
 </html>
